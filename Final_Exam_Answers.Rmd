@@ -1,0 +1,191 @@
+---
+title: "DATA 606 Fall 2017 - Final Exam"
+author: "Kai Lukowiak"
+date: 2017-12-8
+output: html_document
+---
+
+# Part I
+
+Please put the answers for Part I next to the question number (2pts each):
+
+1.  b) ```daysDrive``` is both quantitative and discrete because it takes an integer value that can be interpreted (e.g., 2 days driven is twice as large as one day driven)
+2.  a) the mean is aproximetly 3.3 and the median is approximetly 3.5. We can see that the median should be higher because of the skew. Further, we can see that the mean should be about 3.3. This leaves only a).
+3.  d) Both a) and b) are valid answers depending on the ethical and operational conditions. Both the experiment ```a)``` and the quasi-experiment ```b)``` would give results that could be interpreted causally. 
+4.   ```a)``` the large $\chi^2$ implies that there is a difference between the means of the groups, implying an association.
+5.  
+
+```{r}
+moments <- c(26, 37, 45, 49.8, 65, 44.4, 8.4, 50)
+lab <- c('min',	'Q1',	'median',	'Q3',	'max',	'mean',	'sd',	'n')
+names(moments) <- lab
+moments
+highSD <- moments[['mean']] + moments[['sd']]* 3
+lowSD <- moments[['mean']] - moments[['sd']]* 3
+highSD
+lowSD
+i_q_r <- moments['Q3'] - moments['Q1']
+iqrLower <- moments['Q1'] - 1.5 * i_q_r
+iqrHigher <- moments['Q3'] + 1.5 * i_q_r
+iqrHigher
+iqrLower
+``` 
+The data is ballanced so both the SD and IQR methods give similar results. Generally the IQR way is superior because it can account for skewed data. 
+Thus, the answer is ```b)```
+
+6.  ```d)``` 
+The median and interquartile range are resistant to outliers, whereas the mean and standard deviation are not.
+
+7a. Describe the two distributions (2pts).
+* Distribution A is skewed to the right.
+* Distribution B is normal.
+* Both are unimodal.
+
+7b. Explain why the means of these two distributions are similar but the standard deviations are not (2 pts).
+The means are similar because the expected value $E(x)$ of each $n(30)$ sample is equal to the population mean. This is due to CLT.
+
+The standard deviations are different because sampeling 30 instances will tend to focus around the mean, thus decreasing the SD of distribution B when compared to A.
+
+$$
+SE = \frac{\sigma}{\sqrt{n}}
+\\
+SE = \frac{3.22}{\sqrt{30}} = 0.589
+$$
+The SD of the sample mean is equal to the standard error of one sampe mean. Therefor, given $30 > 1$ we find that the SD for the sample distribution is lower.
+
+7c. What is the statistical principal that describes this phenomenon (2 pts)?
+
+The statistical principal is the central limit theorem. It states that given a large enough sample size and finite variance, the sample mean will approximate the population mean.
+
+# Part II
+
+Consider the four datasets, each with two columns (x and y), provided below. 
+
+```{r}
+options(digits=2)
+data1 <- data.frame(x=c(10,8,13,9,11,14,6,4,12,7,5),
+					y=c(8.04,6.95,7.58,8.81,8.33,9.96,7.24,4.26,10.84,4.82,5.68))
+data2 <- data.frame(x=c(10,8,13,9,11,14,6,4,12,7,5),
+					y=c(9.14,8.14,8.74,8.77,9.26,8.1,6.13,3.1,9.13,7.26,4.74))
+data3 <- data.frame(x=c(10,8,13,9,11,14,6,4,12,7,5),
+					y=c(7.46,6.77,12.74,7.11,7.81,8.84,6.08,5.39,8.15,6.42,5.73))
+data4 <- data.frame(x=c(8,8,8,8,8,8,8,19,8,8,8),
+					y=c(6.58,5.76,7.71,8.84,8.47,7.04,5.25,12.5,5.56,7.91,6.89))
+```
+
+For each column, calculate (to two decimal places):
+
+#### a. The mean (for x and y separately; 1 pt).
+
+```{r}
+library(dplyr)
+#dfNames <- c('data1', 'data2', 'data3', 'data4')
+dfNames <- list(data1, data2, data3, data4)
+dfFunc <- function(df, dfOpp){
+  df %>% summarise(xStat = dfOpp(x),
+                   yStat = dfOpp(y))
+}
+
+loopFunc <- function(opper){
+  for (i in dfNames){
+  x = dfFunc(i, opper)
+  print(x)
+  }
+}
+
+```
+
+```{r}
+loopFunc(mean)
+```
+
+#### b. The median (for x and y separately; 1 pt).
+
+```{r}
+loopFunc(median)
+```
+
+#### c. The standard deviation (for x and y separately; 1 pt).
+
+```{r}
+loopFunc(sd)
+
+```
+
+#### For each x and y pair, calculate (also to two decimal places; 1 pt):
+
+#### d. The correlation (1 pt).
+
+```{r}
+for (i in dfNames){
+  print(cor(i$x, i$y))
+}
+
+```
+
+#### e. Linear regression equation (2 pts).
+
+```{r}
+lm1 <- lm(y~x, data1)
+lm2 <- lm(y~x, data2)
+lm3 <- lm(y~x, data3)
+lm4 <- lm(y~x, data4)
+```
+
+#### f. R-Squared (2 pts).
+
+```{r}
+lmList <- list(lm1, lm2, lm3, lm4)
+j <- 1
+for (i in lmList){
+  print(paste('The RSquard for model',j , 'is:', round(summary(i)$r.squared, 2), sep = " "))
+  j = j+ 1
+}
+
+```
+
+```{r}
+library(ggplot2)
+for (i in dfNames){
+  plot <- ggplot(i, aes(x,y))+
+    geom_point()
+  print(plot)
+}
+```
+
+
+#### For each pair, is it appropriate to estimate a linear regression model? Why or why not? Be specific as to why for each pair and include appropriate plots! (4 pts)
+
+```{r}
+for (i in lmList){
+    par(mfrow=c(1,2))
+    plot(i$residuals)
+    qqnorm(i$residuals)
+    qqline(i$residuals)
+}
+
+```
+
+For data:
+
+1. A linear model looks like it would be a good aproximation because there are no trends in the residuals.
+
+2. a linear model is not appropriate because the data looks like it is a square root:
+
+```{r}
+data1Test <- data1
+data1Test$x <- sqrt(data1Test$x)
+ggplot(data1Test, aes(x,y)) +geom_point()
+```
+
+This could then be used to make linear inference.
+
+3. This is hard to see. The data looks very linear except for one outlier. If there was more data I would have no problem using linear models.
+
+4. This data is not linear and should instead have a logistic regression applied to it given that it appears to be a classification problem.
+
+
+
+#### Explain why it is important to include appropriate visualizations when analyzing data. Include any visualization(s) you create. (2 pts)
+
+Visualizations are very important when analyzing data because data that looks very different and behaves in weird ways can have very similar summary statistics. 
